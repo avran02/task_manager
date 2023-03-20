@@ -7,7 +7,8 @@ from kivy.uix.tabbedpanel import TabbedPanel, TabbedPanelItem
 from kivy.uix.checkbox import CheckBox
 from kivy.uix.spinner import Spinner, SpinnerOption
 from kivy.lang import Builder
-# from kivy.uix.separator import Separator
+from kivy.uix.gridlayout import GridLayout
+
 
 
 
@@ -36,6 +37,8 @@ class MySpinner(Spinner):
         super(MySpinner, self).__init__(**kwargs)
         self.option_cls = SpinnerOptions
 
+class MyTabbedPanelItem(TabbedPanelItem):
+	background_normal = ""
 
 
 
@@ -55,50 +58,90 @@ class MyApp(App):
 		self.label = Label(text='Новая задача:', size_hint=(1, 0.1))
 		self.save_btn = MyButton(text = 'Сохранить', size_hint = (1, 0.1), background_normal = 'some/int_btn.png')
 
-		# self.save_btn_label = MyLabel(text = 'Сохранить', color = (0, 0, 0, 1))
-		self.save_btn.bind(on_press = MyApp.save_task)
+
+		# self.save_btn.bind(on_press = Back.save_task)
 
 		self.writer = TextInput(size_hint = (1, 0.503))
 		self.label2 = Label(text = 'Удалить задачу:', size_hint = (1, 0.1))
 
 		self.rm_selection = MySpinner(values = ('task1', 'task2', 'task3', 'task4'), size_hint = (1, 0.07), text = 'Выберите из списка', background_normal = "")
-		# self.rm_selection.add_widget(Separator(color = (3/255, 53/255, 78/255, 1)))
+
 
 		self.rm_btn = MyButton(text = 'Удалить', size_hint = (1, 0.1), background_normal = 'some/int_btn_rev.png')
-		# self.rm_btn_label = MyLabel(text = 'Удалить задачу', color = (0, 0, 0, 1))
 
 
 
-	def save_task(self):
-		print('any')
+
+	
 	
 
 	def build(self):
 		self.title = 'task manager'
 		
-		tasks_tab = TabbedPanelItem(text = 'Список задач', background_normal = "")
-		config_tab = TabbedPanelItem(text = 'Управление', background_normal = "")
-		tabs = TabbedPanel(default_tab = tasks_tab)
-		tasks_tab.background_normal = 'some/int_btn_rev.png'
-		tasks_tab.background_down = 'some/int_btn.png'
-		config_tab.background_normal = 'some/int_btn_rev.png'
-		config_tab.background_down = 'some/int_btn.png'
+		self.tasks_tab = MyTabbedPanelItem(text = 'Список задач')
+		self.config_tab = MyTabbedPanelItem(text = 'Управление')
+		self.tabs = TabbedPanel(default_tab = self.tasks_tab)
+		self.tasks_tab.background_normal = 'some/my_tab.xcf'
+		self.tasks_tab.background_down = 'some/int_btn.png'
+		self.config_tab.background_normal = 'some/my_tab.xcf'
+		self.config_tab.background_down = 'some/int_btn.png'
 
-		# self.save_btn.add_widget(self.save_btn_label)
-		# self.rm_btn.add_widget(self.rm_btn_label)
+		self.box = BoxLayout(orientation = 'vertical', spacing = 5)
+		self.box.add_widget(self.label)
+		self.box.add_widget(self.save_btn)
+		self.box.add_widget(self.writer)
+		self.box.add_widget(self.label2)
+		self.box.add_widget(self.rm_selection)
+		self.box.add_widget(self.rm_btn)
 
-		box = BoxLayout(orientation = 'vertical', spacing = 5)
-		box.add_widget(self.label)
-		box.add_widget(self.save_btn)
-		box.add_widget(self.writer)
-		box.add_widget(self.label2)
-		box.add_widget(self.rm_selection)
-		box.add_widget(self.rm_btn)
+		self.tasks = GridLayout(cols = 2)
 
-		config_tab.add_widget(box)
-		tabs.add_widget(tasks_tab)
-		tabs.add_widget(config_tab)
-		return tabs
+		self.tasks_tab.add_widget(self.tasks)
+		self.config_tab.add_widget(self.box)
+		self.tabs.add_widget(self.tasks_tab)
+		self.tabs.add_widget(self.config_tab)
+
+		Back.func(self)
+
+		return self.tabs
+
+
+class Back(App):
+	def func(self):
+		Back.init_tasks(self)
+
+
+
+
+	def init_tasks(self): #text <= 42 el
+		with open('tasks.txt','r') as tasks:
+			for line in tasks:
+				if line == '\n' or line[0] == ' ':
+					pass
+				else:
+					Back.add_task_to_screen(self, line[:-1])
+
+
+	def add_task_to_screen(self, text):
+		self.checkBox = CheckBox(width = 50, size_hint_x = None)
+		self.cb_label = MyLabel(text = f'{text[1:]}')
+		self.tasks.add_widget(self.checkBox)
+		self.tasks.add_widget(self.cb_label)
+		self.writer.text = ''
+		if text[0] == '0':
+			self.checkBox.active = False
+			# font = QtGui.QFont()
+			# font.setStrikeOut(False)
+			# font.setPointSize(14)
+			# self.checkBox.setFont(font)
+		else:
+			self.checkBox.active = True
+			# font = QtGui.QFont()
+			# font.setStrikeOut(True)
+			# font.setPointSize(14)
+			# self.checkBox.setFont(font)
+		# self.checkBox.stateChanged.connect(lambda: self.on_checkBox_state_change)	
+
 
 
 if __name__ == '__main__':
