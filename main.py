@@ -17,6 +17,8 @@ from kivy.core.window import Window
 from kivy.properties import ListProperty
 
 
+
+
 Window.size = (400, 500)
 Window.clearcolor = (3/255, 53/255, 78/255, 1)
 
@@ -50,6 +52,8 @@ class MyButton(Button):
 
 class MyLabel(Label):
 	pass
+
+			
 
 class MyApp(App):
 
@@ -107,8 +111,18 @@ class MyApp(App):
 
 
 class Back(App):
+	MyApp.grid = dict()
+
 	def func(self):
 		Back.init_tasks(self)
+
+
+
+	# def checkbox_callback(self, checkbox, value):
+	# 	if value:
+	# 		print("Checkbox is checked")
+	# 	else:
+	# 		print("Checkbox is unchecked")
 
 
 
@@ -124,23 +138,42 @@ class Back(App):
 
 	def add_task_to_screen(self, text):
 		self.checkBox = CheckBox(width = 50, size_hint_x = None)
-		self.cb_label = MyLabel(text = f'{text[1:]}')
+		
 		self.tasks.add_widget(self.checkBox)
-		self.tasks.add_widget(self.cb_label)
+		
+		
 		self.writer.text = ''
 		if text[0] == '0':
 			self.checkBox.active = False
-			# font = QtGui.QFont()
-			# font.setStrikeOut(False)
-			# font.setPointSize(14)
-			# self.checkBox.setFont(font)
+			self.cb_label = MyLabel(text = f'[i]{text[1:]}[/i]', markup = True)
+			
 		else:
 			self.checkBox.active = True
-			# font = QtGui.QFont()
-			# font.setStrikeOut(True)
-			# font.setPointSize(14)
-			# self.checkBox.setFont(font)
+			self.cb_label = MyLabel(text = f'[s]{text[1:]}[/s]', markup = True)
+			
+		self.grid[self.checkBox] = self.cb_label
+		self.tasks.add_widget(self.cb_label)
+		print(self.grid)
 		# self.checkBox.stateChanged.connect(lambda: self.on_checkBox_state_change)	
+
+
+		# def on_checkBox_state_changed(self, text):
+		# for wid in self.tab.findChildren(QtWidgets.QCheckBox):
+		# 	if wid.objectName() == text[1:]:
+		# 		state = wid.checkState()
+		# 		if state == 2:  # 2 - значит, что чекбокс отмечен
+		# 			font = QtGui.QFont()
+		# 			font.setStrikeOut(True)
+		# 			font.setPointSize(14)
+		# 			wid.setFont(font)
+		# 			self.change_txt(text)
+		# 		else:
+		# 			font = QtGui.QFont()
+		# 			font.setStrikeOut(False)
+		# 			font.setPointSize(14)
+		# 			wid.setFont(font)
+		# 			self.change_txt(text)
+
 
 
 
