@@ -1,3 +1,8 @@
+a = ('S', 'o', 'r', 'r', 'y', ' ', 'f', 'o', 'r', ' ', 't' , 'u', 'p', 'l', 'e')
+for i in a:
+    print(i, end='')
+print('\n')
+
 from kivy.app import App
 from kivy.uix.label import Label
 from kivy.uix.button import Button
@@ -58,6 +63,7 @@ class MyLabel(Label):
 class MyApp(App):
 
 	def __init__(self):
+		print(f'self : {self}')
 		super().__init__()
 		self.label = Label(text='Новая задача:', size_hint=(1, 0.1))
 		self.save_btn = MyButton(text = 'Сохранить', size_hint = (1, 0.1), background_normal = 'some/int_btn.png')
@@ -68,14 +74,28 @@ class MyApp(App):
 		self.writer = TextInput(size_hint = (1, 0.503))
 		self.label2 = Label(text = 'Удалить задачу:', size_hint = (1, 0.1))
 
-		self.rm_selection = MySpinner(values = ('task1', 'task2', 'task3', 'task4'), size_hint = (1, 0.07), text = 'Выберите из списка', background_normal = "")
+		self.rm_selection = MySpinner(size_hint = (1, 0.07), text = 'Выберите из списка', background_normal = "")
+		Back.add_removing_el(self)
 
 
 		self.rm_btn = MyButton(text = 'Удалить', size_hint = (1, 0.1), background_normal = 'some/int_btn_rev.png')
 
+		
 
 
-
+	def add_task_with_btn(self, state):
+		text = self.writer.text
+		if text != '':
+			if text[0] == ' ':
+				TXT.clear_txt()# а нужен ли этот метод он медленный
+                # QtWidgets.QMessageBox TODO: понять какого гуя зачеркивается всегда последняя задача
+			else:
+				TXT.clear_txt(self)
+				text = '0' + text
+				TXT.backup_tasks(self, text)
+				Back.add_task_to_screen(self,text)
+				
+				Back.add_removing_el(self)
 	
 	
 
@@ -84,7 +104,7 @@ class MyApp(App):
 		
 		self.tasks_tab = MyTabbedPanelItem(text = 'Список задач')
 		self.config_tab = MyTabbedPanelItem(text = 'Управление')
-		self.tabs = TabbedPanel(default_tab = self.tasks_tab)
+		self.tabs = TabbedPanel(default_tab = self.config_tab)
 		self.tasks_tab.background_normal = 'some/my_tab.xcf'
 		self.tasks_tab.background_down = 'some/int_btn.png'
 		self.config_tab.background_normal = 'some/my_tab.xcf'
@@ -105,9 +125,62 @@ class MyApp(App):
 		self.tabs.add_widget(self.tasks_tab)
 		self.tabs.add_widget(self.config_tab)
 
+
 		Back.func(self)
+		self.save_btn.bind(on_press = self.add_task_with_btn)
+		self.rm_btn.bind(on_press = self.rm_task_from_tab)
+
 
 		return self.tabs
+
+
+		# def rm_task_from_tab(self):
+	# 	for i in reversed(range(self.verticalLayout.count())):
+	# 		self.verticalLayout.itemAt(i).widget().deleteLater()
+	# 	text = self.rm_task.currentText()
+	# 	with open('tasks.txt','r') as tasks:
+	# 		lines = ''
+	# 		for line in tasks:
+	# 			if line[1:-1] == text:
+	# 				pass
+	# 			else:
+	# 				lines += line
+	# 	with open('tasks.txt', 'w') as tasks:
+	# 		tasks.write(lines)
+	# 	self.rm_task.clear()
+	# 	self.add_removing_el()
+	# 	try:
+	# 		self.init_tasks()
+	# 	except AttributeError:
+	# 		print('deliteing error')#TODO: Qmessage
+
+	def rm_task_from_tab(self, state):
+		print(f'grid before: {self.grid}')
+		text = self.rm_selection.text
+		# print(f'text is {text}', f'lenth: {len(text)}')
+		with open ('tasks.txt', 'r') as tasks:
+			lines = ''
+			for line in tasks:
+				# print(line[1:-1], f'lenth: {len(line[1:-1])}')
+				if line[1:-1] == text:
+					print('was founded')
+					pass
+				else:
+					lines += line
+		with open ('tasks.txt', 'w') as tasks:
+			tasks.write(lines)
+
+		for wid in self.grid:
+			print(self.grid[wid].text[3:-4])
+			if self.grid[wid].text[3:-4] == text:
+				print('Найдено')
+				self.tasks.remove_widget(wid)
+				self.tasks.remove_widget(self.grid[wid]) #todo: убрать утечку памяти
+
+		print(f'grid after: {self.grid}')
+		Back.add_removing_el(self)
+		self.rm_selection.text = 'Выберите из списка'
+
 
 
 class Back(App):
@@ -118,11 +191,26 @@ class Back(App):
 
 
 
-	# def checkbox_callback(self, checkbox, value):
-	# 	if value:
-	# 		print("Checkbox is checked")
-	# 	else:
-	# 		print("Checkbox is unchecked")
+
+	def checkbox_callback(self, value):
+		
+		self.cb_label = MyApp.grid[self]
+		text = self.cb_label.text[3:-4]
+		
+		print(text)
+		if value:
+			
+			print("Checkbox is checked")
+			self.cb_label.text = f'[s]{text}[/s]'
+			TXT.set_checked_in_txt(self, text)
+			print('seccess!')
+
+		else:
+			print("Checkbox is unchecked")
+			self.cb_label.text = f'[i]{text}[/i]'
+			print('seccess!')
+			TXT.set_unchecked_in_txt(self, text)
+	
 
 
 
@@ -145,36 +233,88 @@ class Back(App):
 		self.writer.text = ''
 		if text[0] == '0':
 			self.checkBox.active = False
-			self.cb_label = MyLabel(text = f'[i]{text[1:]}[/i]', markup = True)
+			self.cb_label = MyLabel(markup = True)
+			self.cb_label.text = f'[i]{text[1:]}[/i]'
 			
 		else:
 			self.checkBox.active = True
-			self.cb_label = MyLabel(text = f'[s]{text[1:]}[/s]', markup = True)
+			self.cb_label = MyLabel(markup = True)
+			self.cb_label.text = f'[s]{text[1:]}[/s]'
 			
 		self.grid[self.checkBox] = self.cb_label
 		self.tasks.add_widget(self.cb_label)
-		print(self.grid)
-		# self.checkBox.stateChanged.connect(lambda: self.on_checkBox_state_change)	
+		# print(self.grid)
+		self.checkBox.bind(active = Back.checkbox_callback)
 
 
-		# def on_checkBox_state_changed(self, text):
-		# for wid in self.tab.findChildren(QtWidgets.QCheckBox):
-		# 	if wid.objectName() == text[1:]:
-		# 		state = wid.checkState()
-		# 		if state == 2:  # 2 - значит, что чекбокс отмечен
-		# 			font = QtGui.QFont()
-		# 			font.setStrikeOut(True)
-		# 			font.setPointSize(14)
-		# 			wid.setFont(font)
-		# 			self.change_txt(text)
-		# 		else:
-		# 			font = QtGui.QFont()
-		# 			font.setStrikeOut(False)
-		# 			font.setPointSize(14)
-		# 			wid.setFont(font)
-		# 			self.change_txt(text)
+	def add_removing_el(self):
+		lines = tuple()
+		with open('tasks.txt','r') as tasks:
+			for line in tasks:
+				if line == '\n' or line[0] == ' ':
+					pass
+				else:
+					lines += (line[1:-1], )
+			self.rm_selection.values = lines
+		
+	
+		
 
 
+class TXT(Back):
+	
+	def set_checked_in_txt(self, text):
+			with open('tasks.txt','r') as tasks:
+				lines = ''
+				for line in tasks:
+					if line[1:-1] == text:
+						
+						list_line = list(line)
+						list_line[0] = '1'
+						line = ''.join(list_line)
+						lines += line
+					else:
+						lines += line
+
+					with open('tasks.txt', 'w') as tasks:
+						tasks.write(lines)
+
+
+	def set_unchecked_in_txt(self, text):
+			with open('tasks.txt','r') as tasks:
+				lines = ''
+				for line in tasks:
+					if line[1:-1] == text:
+						
+						list_line = list(line)
+						list_line[0] = '0'
+						line = ''.join(list_line)
+						lines += line
+					else:
+						lines += line
+
+					with open('tasks.txt', 'w') as tasks:
+						tasks.write(lines)
+
+
+
+	def clear_txt(self):
+		with open('tasks.txt','r') as tasks:
+			lines = ''
+			for line in tasks:
+				if line == '\n' or line[0] == ' ':
+					pass
+				else:
+					lines += line
+		with open('tasks.txt', 'w') as tasks:
+			tasks.write(lines)
+
+
+
+	def backup_tasks(self, text):
+		with open('tasks.txt', 'a') as tasks:
+			tasks.write(f'{text}\n')
+	
 
 
 if __name__ == '__main__':
