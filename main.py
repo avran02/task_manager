@@ -22,6 +22,8 @@ from kivy.properties import ListProperty
 Window.borderless = True
 Window.size = (400, 500)
 Window.clearcolor = (3/255, 53/255, 78/255, 1)
+Window.left = 0
+Window.top = 0
 
 Builder.load_file('styles.kv')
 
